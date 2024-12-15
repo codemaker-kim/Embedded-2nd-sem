@@ -1,7 +1,6 @@
 import socket
 from machine import Pin, PWM, Timer, I2C, ADC
 import time
-from time import sleep_ms
 import network
 import urequests
 import ujson
@@ -98,7 +97,7 @@ def handle_request(request):
             # 서보 모터를 반시계방향으로 다시 0도로 되돌리기
             servo1.duty_u16(duty_return_deg)
             servo2.duty_u16(duty_return_deg)
-            sleep(0.5)  # 모터가 원래 위치로 되돌아갈 수 있도록 잠시 대기
+            time.sleep(0.5)  # 모터가 원래 위치로 되돌아갈 수 있도록 잠시 대기
 
             servo1.duty_u16(duty_stop_deg)
             servo2.duty_u16(duty_stop_deg)
