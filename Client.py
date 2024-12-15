@@ -1,14 +1,28 @@
-from machine import Pin
+from machine import Pin, I2C
+from i2c_lcd import I2cLcd
 import network
 import socket
 import time
+import ujson
 
+# 와이파이 변수
 WiFi = "SmuWiFi_Free"
 PASSWORD = "password"
 server_ip = "server_ip"
 
 wlan = network.WLAN(network.STA_IF)
 wlan.active(True)
+
+#버튼 세팅
+button = Pin(15, Pin.IN, Pin.PULL_DOWN)
+
+#LCD 설정
+i2c = I2C(0, scl=Pin(17), sda=Pin(16))
+lcd = I2cLcd(i2c, 0x27, 4, 20)
+
+#LCD 초기화
+lcd.clear()
+lcd.putstr("Hello from pico!\n - Bed Click - ")
 
 # 와이파이 연결
 def connect_wifi():
@@ -35,8 +49,10 @@ def toggleLight(client_socket):
 
     response = client_socket.recv(1024)
     print("Response from server:")
-    print(response.decode())
-
+    # print(response.decode())
+    parsed_response = ujson.loads(response.decode())
+    lcd.clear()
+    lcd.putstr(f"{parsed_response['state']} \n Changed Time: {parsed_response['time']} \n - Bed Click - ")
     client_socket.close()
 
 
@@ -48,9 +64,8 @@ def open_socket():
     print(client_socket)
     return client_socket
 
-# 리모컨 버튼 세팅
+# 리모컨 로직
 try:
-    button = Pin(15, Pin.IN, Pin.PULL_DOWN)
     while True:
         if button.value() == 1:
             connect_wifi()

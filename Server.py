@@ -84,7 +84,7 @@ def handle_request(request):
     # 요청 처리 나중에 조건 처리 수정 필요
     if "/toggle" in request:
         state = toggleLight()
-        if state == "on":
+        if state[0] == "on":
             servo1.duty_u16(duty_start_deg)
             servo2.duty_u16(duty_start_deg)
             time.sleep(0.5)  # 모터가 0도로 이동할 수 있도록 잠시 대기
@@ -93,7 +93,7 @@ def handle_request(request):
             servo1.duty_u16(duty_stop_deg)
             servo2.duty_u16(duty_stop_deg)
 
-        elif state == "off":
+        elif state[0] == "off":
             # 서보 모터를 반시계방향으로 다시 0도로 되돌리기
             servo1.duty_u16(duty_return_deg)
             servo2.duty_u16(duty_return_deg)
@@ -103,7 +103,8 @@ def handle_request(request):
             servo2.duty_u16(duty_stop_deg)
 
         response = {"state": f"Light is {state}!",
-                    "message": f"Successfully {state}."}
+                    "message": f"Successfully {state}.",
+                    "time": f"{state[1]}"}
         return response
     else:
         return {"Error": "Fail to toggle Light."}
@@ -119,7 +120,7 @@ def toggleLight():
         data = {"state": "off", "toggleTime": f"{toggleTime}"}
         urequests.patch(DB_SERVER_URL + ".json", json=data)
         print("Send Light off Request!")
-        return "off"
+        return ["off", toggleTime]
     elif lightState == "off":
         toggleTime = time.localtime()
         beforeUseLightTime = urequests.get(DB_SERVER_URL + ".json").json()['toggleTime']
@@ -132,12 +133,12 @@ def toggleLight():
         urequests.patch(DB_SERVER_URL + ".json", json=data)
         print("Send Light On Request!")
         print("Off time: ", offTime)
-        return "on"
+        return ["on", offTime]
     else:
         toggleTime = time.localtime()
         data = {"state": "on", "toggleTime": f"{toggleTime}"}
         urequests.post(DB_SERVER_URL + ".json", json=data)
-        return "on"
+        return ["on", toggleTime]
 
 
 # 스위치 켜고 껏을 때 시간 차이 계산 출력
@@ -151,14 +152,14 @@ def calc_timeDifference(toggleTime, beforeUseLightTime):
     minutes = 0
 
     if time_difference >= 3600:
-        hours = time_difference / 3600
+        hours = time_difference // 3600
         time_difference = time_difference - (3600 * hours)
 
     if time_difference >= 60:
-        minutes = time_difference / 60
+        minutes = time_difference // 60
         time_difference = time_difference - (60 * minutes)
 
-    return f"{hours}: {minutes} : {time_difference}"
+    return f"{hours}: {minutes} : {time_difference:01}"
 
 
 try:
