@@ -3,12 +3,12 @@ from i2c_lcd import I2cLcd
 import network
 import socket
 import time
-import ujson
+import json
 
 # 와이파이 변수
-WiFi = "SmuWiFi_Free"
-PASSWORD = "password"
-server_ip = "server_ip"
+WiFi = "wifiname"
+PASSWORD = ""
+server_ip = "ip"
 
 wlan = network.WLAN(network.STA_IF)
 wlan.active(True)
@@ -35,7 +35,6 @@ def connect_wifi():
     print("\nConnected to WiFi!")
     print("IP Address:", wlan.ifconfig()[0])
 
-
 # 서버에 요청 보내기
 def toggleLight(client_socket):
     endpoint = "toggle"
@@ -47,13 +46,30 @@ def toggleLight(client_socket):
     print("Sending request:", request)
     client_socket.send(request.encode())
 
-    response = client_socket.recv(1024)
-    print("Response from server:")
-    # print(response.decode())
-    parsed_response = ujson.loads(response.decode())
-    lcd.clear()
-    lcd.putstr(f"{parsed_response['state']} \n Changed Time: {parsed_response['time']} \n - Bed Click - ")
-    client_socket.close()
+    response = client_socket.recv(1024).decode()
+    print("Raw Response from server:")
+    print(response)
+
+    try:
+        # HTTP 헤더와 본문 분리
+        json_start = response.find("\r\n\r\n") + 4  # 헤더 끝 다음 위치
+        json_content = response[json_start:]  # JSON 본문 추출
+        print("Extracted JSON Content:", json_content)
+
+        # JSON 파싱
+        parsed_response = json.loads(json_content)
+        print("Parsed Response:", parsed_response)
+
+        # LCD 출력
+        lcd.clear()
+        lcd.putstr(f"{parsed_response['state']} \nChanged Time: {parsed_response['time']}\n- Bed Click -")
+    except (ValueError, KeyError) as e:
+        print(f"Error parsing JSON: {e}")
+        lcd.clear()
+        lcd.putstr("Error: Invalid JSON")
+    finally:
+        client_socket.close()
+
 
 
 # 소켓 준비

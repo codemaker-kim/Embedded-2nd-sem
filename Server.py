@@ -6,9 +6,9 @@ import urequests
 import ujson
 
 # 서버 코드 - 서보 처리
-WiFi = "WIFI_NAME"
-PASSWORD = "PW"
-DB_SERVER_URL = "DB_SERVER_URL"
+WiFi = "wifiname"
+PASSWORD = "pw"
+DB_SERVER_URL = "db url"
 
 wlan = network.WLAN(network.STA_IF)
 wlan.active(True)
@@ -102,8 +102,8 @@ def handle_request(request):
             servo1.duty_u16(duty_stop_deg)
             servo2.duty_u16(duty_stop_deg)
 
-        response = {"state": f"Light is {state}!",
-                    "message": f"Successfully {state}.",
+        response = {"state": f"Light is {state[0]}!",
+                    "message": f"Successfully {state[0]}.",
                     "time": f"{state[1]}"}
         return response
     else:
