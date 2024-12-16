@@ -22,7 +22,9 @@ lcd = I2cLcd(i2c, 0x27, 4, 20)
 
 #LCD 초기화
 lcd.clear()
-lcd.putstr("Hello from pico!\n - Bed Click - ")
+lcd.putstr("  Hello from pico!")
+lcd.move_to(0, 1)
+lcd.putstr("     -bed click-")
 
 # 와이파이 연결
 def connect_wifi():
@@ -62,7 +64,17 @@ def toggleLight(client_socket):
 
         # LCD 출력
         lcd.clear()
-        lcd.putstr(f"{parsed_response['state']} \nChanged Time: {parsed_response['time']}\n- Bed Click -")
+        lcd.putstr(f"    {parsed_response['state']}")
+        lcd.move_to(0,1)
+        if 'off' in parsed_response['state']:
+            tmp = parsed_response['time'].split(', ')
+            time_parse = f"{tmp[1]}-{tmp[2]} {tmp[3]}:{tmp[4]}:{tmp[5]}"
+            lcd.putstr(f"Time: {time_parse}")
+            lcd.move_to(0,2)
+        else:
+            lcd.putstr(f"Time: {parsed_response['time']}")
+            lcd.move_to(0,2)
+        lcd.putstr("   - Bed Click -")
     except (ValueError, KeyError) as e:
         print(f"Error parsing JSON: {e}")
         lcd.clear()
