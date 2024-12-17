@@ -59,3 +59,15 @@ class LcdApi:
         """Write data to the LCD. Must be implemented in a subclass."""
         raise NotImplementedError
 
+    def move_to(self, cursor_x, cursor_y):
+        """Moves the cursor position to the indicated position. The cursor
+        position is zero based (i.e. cursor_x == 0 indicates first column).
+        """
+        self.cursor_x = cursor_x
+        self.cursor_y = cursor_y
+        addr = cursor_x & 0x3f
+        if cursor_y & 1:
+            addr += 0x40  # Lines 1 & 3 add 0x40
+        if cursor_y & 2:  # Lines 2 & 3 add number of columns
+            addr += self.num_columns
+        self.hal_write_command(self.LCD_DDRAM | addr)
